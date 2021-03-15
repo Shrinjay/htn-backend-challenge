@@ -36,7 +36,7 @@ def get_users():
 def update_users():
     conn = db.connect(DB_FILE_PATH)
     cur = conn.cursor()
-    req = [fk.request.json] if len(fk.request.json) == 0 else fk.request.json
+    req = fk.request.json if isinstance(fk.request.json, list) else [fk.request.json]
     target_ids = fk.request.args.getlist('user')
 
     for user_id, skill_req in [(target_ids[i], req[i]) for i in range(len(target_ids))]:
