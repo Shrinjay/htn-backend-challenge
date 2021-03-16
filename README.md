@@ -46,7 +46,7 @@ if one already exists.
 }
 ```
 Where the parameter is any or multiple of the following: name, picture, company
-, email, phone, skills (must be passed in as a list).
+, email, phone, skills (must be passed in as a list). **A list with a single JSON is also acceptable**.
 * To **update multiple users** specify multiple user ids, 
   ```PUT http://localhost:5000/users?user=x&user=y``` and specify request body
 as a list in order of user ids:
