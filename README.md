@@ -31,7 +31,7 @@ to generate the database in your local machine.
 file is present in the loader directory, an SQLite database will be created, or reset
 if one already exists.
 
-### Users Route
+###  Users Route
 ```GET http://localhost:5000/users?user=```
 * Leaving ```user``` undefined will fetch all users
 * ```user``` parameter **must correspond to a user id** .
