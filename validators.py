@@ -1,5 +1,4 @@
 VALID_USER_UPDATE_FIELDS = ['name', 'picture', 'company', 'email', 'phone', 'skills']
-VALID_SKILL_UPDATE_FIELDS = ['name', 'rating']
 
 
 # Helpers
@@ -43,23 +42,13 @@ def validate_request_parameters(request, valid_parameters):
 
 
 def validate_user_request(request, cur):
-    if request.args.get('user') is not None and request.args.get('user').find(',') != -1:
-        return ValidatorResponse(False, "Cannot pass multiple parameters with 'x,y'. Instead, use ?param=x&param=y")
-    else:
+    if request.args.get('user') is not None:
+        if request.args.get('user').find(',') != -1:
+            return ValidatorResponse(False, "Cannot pass multiple parameters with 'x,y'. Instead, use ?param=x&param=y")
         cur.execute("SELECT id FROM users")
-        valid_ids = set(map(lambda row: row[0], cur.fetchall()))
-        if not set(request.args.get('user')).issubset(valid_ids):
+        valid_ids = set(map(lambda row: f'{row[0]}', cur.fetchall()))
+        if not set(request.args.getlist('user')).issubset(valid_ids):
             return ValidatorResponse(False, f"Invalid user id")
-    return ValidatorResponse(True)
-
-
-def _validate_skill_update_payload(skill_payload):
-    for skill in skill_payload:
-        if len(set(skill.keys())) != len(skill.keys()):
-            return ValidatorResponse(False, "Cannot pass mutliple values per key for a skill")
-        elif not list(skill.keys()) == VALID_SKILL_UPDATE_FIELDS:
-            return ValidatorResponse(False,
-                                     f"Invalid or missing skill update keys, valid keys are {','.join(VALID_SKILL_UPDATE_FIELDS)}")
     return ValidatorResponse(True)
 
 
@@ -68,12 +57,7 @@ def _validate_user_update_payload(user_payload):
         return ValidatorResponse(False, "Cannot pass multiple values per key for a user")
 
     elif set(user_payload.keys()).issubset(VALID_USER_UPDATE_FIELDS):
-        if not isinstance(user_payload['skills'], list):
-            return ValidatorResponse(False, "Skills must be a list")
-        elif user_payload['skills'] is not None:
-            return _validate_skill_update_payload(user_payload['skills'])
-        else:
-            return ValidatorResponse(True)
+        return ValidatorResponse(True)
 
     else:
         return ValidatorResponse(False,

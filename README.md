@@ -11,10 +11,10 @@ on query.
 * Count and select skills by frequency.
 * Request validation on all routes to validate parameter/request body shape.
 
-##Setup:
+## Setup:
 * Clone the directory into your local machine.
 * Ensure you have Python 3.5+, and the most recent
-  version of SQLite installed, run ```pip install sqlite3 flask```
+  version of SQLite installed, run ```pip install flask```
 if the appropriate packages are not already installed on your environment.
   
 * Run ```python main.py```
@@ -25,13 +25,13 @@ to generate the database in your local machine.
 
 # Routes:
 
-###Loader Route
+### Loader Route
 ```GET http://localhost:5000/run_loader```
 <br>No configuration is required, as long as a valid ```hacker-data-2021.json```
 file is present in the loader directory, an SQLite database will be created, or reset
 if one already exists.
 
-###Users Route
+### Users Route
 ```GET http://localhost:5000/users?user=```
 * Leaving ```user``` undefined will fetch all users
 * ```user``` parameter **must correspond to a user id** .

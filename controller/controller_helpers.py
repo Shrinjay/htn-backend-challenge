@@ -12,9 +12,9 @@ def get_user_data_from_ids(id_list: List[int], cur):
 def get_user_json_by_id(user_id: int, cur):
 
     cur.execute(f"SELECT {','.join(USER_FIELDS)} FROM users WHERE id={user_id};")
-    user_row = cur.fetchall()[0] if cur.fetchall() is not None else None
+    user_row = cur.fetchall()[0]
     cur.execute(f"SELECT {','.join(SKILL_FIELDS)} FROM skills WHERE user_id={user_id};")
-    skill_rows = cur.fetchall() if cur.fetchall() is not None else None
+    skill_rows = cur.fetchall()
 
     user_json = dict(zip(USER_FIELDS, list(user_row)))
     user_json['skills'] = list(map(lambda skill_row: {'name': skill_row[0], 'rating': skill_row[1]}, skill_rows))
