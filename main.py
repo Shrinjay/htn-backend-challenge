@@ -1,5 +1,5 @@
 import flask as fk
-from controller import controller
+from controller.controller import controller
 
 PORT = 5000
 

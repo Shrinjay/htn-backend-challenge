@@ -1,29 +1,24 @@
 from typing import List
+import sys
+
+USER_FIELDS = ['name', 'picture', 'company', 'email', 'phone']
+SKILL_FIELDS = ['skill_name', 'skill_value']
 
 
-def get_all_user_data_from_ids(id_list: List[int], cur):
-    return list(map(get_user_json_by_id, id_list, [cur for _ in range(len(id_list))]))
+def get_user_data_from_ids(id_list: List[int], cur):
+    return list(map(lambda user_id: get_user_json_by_id(user_id, cur), id_list))
 
 
-def get_user_json_by_id(id: int, cur):
-    user_fields = ['name', 'picture', 'company', 'email', 'phone']
-    skill_fields = ['skill_name', 'skill_value']
+def get_user_json_by_id(user_id: int, cur):
 
-    cur.execute(f"SELECT {','.join(user_fields)} FROM users WHERE id={id};")
-    user_row = cur.fetchall()[0]
-    cur.execute(f"SELECT {','.join(skill_fields)} FROM skills WHERE user_id={id};")
-    skill_rows = cur.fetchall()
+    cur.execute(f"SELECT {','.join(USER_FIELDS)} FROM users WHERE id={user_id};")
+    user_row = cur.fetchall()[0] if cur.fetchall() is not None else None
+    cur.execute(f"SELECT {','.join(SKILL_FIELDS)} FROM skills WHERE user_id={user_id};")
+    skill_rows = cur.fetchall() if cur.fetchall() is not None else None
 
-    user_json = dict(zip(user_fields, list(user_row)))
-    user_json['skills'] = list(map(generate_skill_dict_from_row, skill_rows))
+    user_json = dict(zip(USER_FIELDS, list(user_row)))
+    user_json['skills'] = list(map(lambda skill_row: {'name': skill_row[0], 'rating': skill_row[1]}, skill_rows))
     return user_json
-
-
-def generate_skill_dict_from_row(skill_row):
-    return {
-        'name': skill_row[0],
-        'rating': skill_row[1]
-    }
 
 
 def generate_update_from_req(target_id, cur, req):
@@ -64,3 +59,22 @@ def generate_update_from_req(target_id, cur, req):
             return []
 
     return queries
+
+
+def generate_skills_freq_query(min_frequency: int, max_frequency: int):
+
+    sql = f"""
+        WITH skill_data AS (
+            SELECT skill_name, COUNT(*) AS frequency FROM skills GROUP BY skill_name ORDER BY frequency DESC
+        )
+        SELECT * FROM skill_data 
+        """
+    if min_frequency > 0:
+        sql += f"WHERE frequency > {min_frequency} "
+
+    if max_frequency < sys.maxsize:
+        sql += f"{'WHERE' if min_frequency == 0 else 'AND'} frequency < {max_frequency}"
+
+    return sql
+
+

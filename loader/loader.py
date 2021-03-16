@@ -9,18 +9,40 @@ class LoaderQuery:
         self.skills_queries = list(itertools.chain(skills_queries))
 
 
-def generate_skill_insert(index: int, skills_object):
+def find(predicate, list):
+    for e in list:
+        if predicate(e):
+            return e
+    return None
+
+
+def generate_skill_insert_query(index: int, skills_object):
     sql = f"INSERT into skills (user_id, skill_name, skill_value) " \
-          f"VALUES ({index}, '{skills_object[0]}', {skills_object[1]});"
+          f"VALUES ({index}, '{skills_object['name']}', {skills_object['rating']});"
     return sql
 
 
-def generate_insert(index: int, entry) -> LoaderQuery:
+def clean_skills_list(skills_list):
+
+    cleaned_skills = []
+    for skill in skills_list:
+        duplicate_skill = find(lambda saved_skill: saved_skill['name'] == skill['name'], cleaned_skills)
+
+        if duplicate_skill is None:
+            cleaned_skills.append(skill)
+        else:
+            duplicate_skill['rating'] = max(duplicate_skill['rating'], skill['rating'])
+
+    return cleaned_skills
+
+
+def generate_insert_query(index: int, entry) -> LoaderQuery:
     user_sql = f"INSERT into users (id, name, picture, company, email, phone) " \
                f"VALUES ({index}, '{entry['name']}', '{entry['picture']}', '{entry['company']}', '{entry['email']}'," \
                f" '{entry['phone']}');"
-    skill_list = list(map(lambda skill: (skill['name'], skill['rating']), entry['skills']))
-    skill_queries = list(map(generate_skill_insert, [index for _ in range(len(skill_list))], skill_list))
+
+    cleaned_skills = clean_skills_list(entry['skills'])
+    skill_queries = list(map(lambda skill: generate_skill_insert_query(index, skill), cleaned_skills))
     return LoaderQuery(user_sql, skill_queries)
 
 
@@ -58,23 +80,19 @@ def clear_db(cur):
         print("sequence doesn't exist")
 
 
-# noinspection PyBroadException
 def load_from_json(file_path: str, conn):
-    try:
-        with open(file_path) as file_data:
-            raw_data = json.load(file_data)
-        query_list = list(map(generate_insert, [i for i in range(len(raw_data))], raw_data))
+    with open(file_path) as file_data:
+        raw_data = json.load(file_data)
 
-        cur = conn.cursor()
-        clear_db(cur)
-        conn.commit()
+    query_list = list(map(generate_insert_query, [i for i in range(len(raw_data))], raw_data))
 
-        for query_object in query_list:
-            insert_from_loader(cur, query_object)
-        conn.commit()
+    cur = conn.cursor()
+    clear_db(cur)
+    conn.commit()
 
-        return True
+    for query_object in query_list:
+        insert_from_loader(cur, query_object)
+    conn.commit()
+    cur.close()
 
-    except:
-        return False
-
+    return True
